@@ -20,7 +20,11 @@ function App() {
     );
   }, []);
 
-  const handleSearch = async () => {
+	console.log('Query:', query);
+	console.log('Lat:', location.lat);
+	console.log('Lng:', location.lng);
+	
+	const handleSearch = async () => {
     setPage(1);
     const res = await fetch(`${BACKEND_URL}/api/stores/search?query=${query}&lat=${location.lat}&lng=${location.lng}&page=1`);
     const data = await res.json();
