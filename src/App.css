@@ -1,6 +1,5 @@
 .App {
   text-align: center;
-<<<<<<< HEAD
   padding: 20px;
   font-family: sans-serif;
 }
@@ -22,7 +21,6 @@ button {
   width: 300px;
   border: 1px solid #ccc;
   border-radius: 10px;
-=======
 }
 
 .App-logo {
@@ -58,5 +56,4 @@ button {
   to {
     transform: rotate(360deg);
   }
->>>>>>> 7d77fec48cec56e438f759d71513f188942d6abd
 }
