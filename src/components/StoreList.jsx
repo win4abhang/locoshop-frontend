@@ -205,7 +205,7 @@ const StoreList = () => {
                     "_blank"
                   );
                 } else {
-                  alert("Location not available for this store.");
+                  alert(`Location not available for this store. ${store.latitude}, ${store.longitude}`);
                 }
               }}
               title="Get Directions"
