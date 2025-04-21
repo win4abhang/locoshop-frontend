@@ -57,3 +57,19 @@ button {
     transform: rotate(360deg);
   }
 }
+.suggestions-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  background-color: white;
+}
+
+.suggestions-list li {
+  padding: 5px;
+  cursor: pointer;
+}
+
+.suggestions-list li:hover {
+  background-color: #f0f0f0;
+}

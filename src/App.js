@@ -3,12 +3,36 @@ import './App.css';
 
 const BACKEND_URL = 'https://locoshop-backend.onrender.com'; // your deployed backend URL
 
+// Helper function for fuzzy matching using Levenshtein distance
+const getLevenshteinDistance = (a, b) => {
+  const tmp = [];
+  for (let i = 0; i <= b.length; i++) tmp[i] = [i];
+  for (let j = 0; j <= a.length; j++) tmp[0][j] = j;
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      tmp[i][j] =
+        a[j - 1] === b[i - 1]
+          ? tmp[i - 1][j - 1]
+          : Math.min(tmp[i - 1][j] + 1, tmp[i][j - 1] + 1, tmp[i - 1][j - 1] + 1);
+    }
+  }
+  return tmp[b.length][a.length];
+};
+
+const BACKEND_URL = 'https://locoshop-backend.onrender.com'; // your deployed backend URL
+
 function App() {
   const [query, setQuery] = useState('');
   const [stores, setStores] = useState([]);
+  const [filteredStores, setFilteredStores] = useState([]);
   const [page, setPage] = useState(1);
   const [location, setLocation] = useState({ lat: null, lng: null });
-  const [loading, setLoading] = useState(false); // Add loading state
+  const [loading, setLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+
+  // Store names for autocomplete
+  const storeNames = stores.map(store => store.name);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -16,26 +40,33 @@ function App() {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         setLocation({ lat, lng });
-        alert(`✅ Location fetched:\nLat: ${lat}\nLng: ${lng}`);
-        console.log('✅ Location:', lat, lng);
       },
       (err) => {
-        alert('❌ Location access denied. Using default location: Pune');
-        console.error('Geolocation error:', err.message);
         setLocation({ lat: 18.5204, lng: 73.8567 }); // Fallback to Pune
       }
     );
   }, []);
 
+  useEffect(() => {
+    if (query.length > 0) {
+      // Fuzzy search for store names (using Levenshtein distance)
+      const filtered = storeNames.filter(name =>
+        getLevenshteinDistance(query.toLowerCase(), name.toLowerCase()) <= 3 // Adjust the tolerance
+      );
+      setSuggestions(filtered);
+    } else {
+      setSuggestions([]);
+    }
+  }, [query]);
+
   const handleSearch = async () => {
     if (!location.lat || !location.lng) {
-      alert("📍 Location not ready yet. Please wait and try again.");
+      alert("📍 Location not ready yet.");
       return;
     }
 
     setLoading(true);
     try {
-      setPage(1);
       const res = await fetch(
         `${BACKEND_URL}/api/stores/search?query=${query}&lat=${location.lat}&lng=${location.lng}&page=1`
       );
@@ -46,47 +77,18 @@ function App() {
       }
 
       const data = await res.json();
-
-      if (data.length === 0) {
-        alert("😕 No stores found for this search.");
-      }
-
       setStores(data);
+      setFilteredStores(data);
     } catch (err) {
-      console.error("Fetch error:", err);
       alert("❌ Network error or server unreachable.");
     } finally {
       setLoading(false);
     }
   };
 
-  const loadMore = async () => {
-    if (!location.lat || !location.lng) {
-      alert("📍 Location not ready yet.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const nextPage = page + 1;
-      const res = await fetch(
-        `${BACKEND_URL}/api/stores/search?query=${query}&lat=${location.lat}&lng=${location.lng}&page=${nextPage}`
-      );
-
-      if (!res.ok) {
-        alert("❌ Error fetching more data.");
-        return;
-      }
-
-      const data = await res.json();
-      setStores((prev) => [...prev, ...data]);
-      setPage(nextPage);
-    } catch (err) {
-      console.error("Fetch error:", err);
-      alert("❌ Could not load more data.");
-    } finally {
-      setLoading(false);
-    }
+  const handleAutocompleteClick = (suggestion) => {
+    setQuery(suggestion);
+    setSuggestions([]);
   };
 
   return (
@@ -102,13 +104,21 @@ function App() {
         <button onClick={handleSearch} disabled={loading}>
           {loading ? "Loading..." : "Search"}
         </button>
+
+        {/* Autocomplete suggestions */}
+        {suggestions.length > 0 && (
+          <ul className="suggestions-list">
+            {suggestions.map((suggestion, index) => (
+              <li key={index} onClick={() => handleAutocompleteClick(suggestion)}>
+                {suggestion}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div>
-        {stores.length === 0 && !loading && (
-          <p>No stores found for this search.</p>
-        )}
-        {stores.map((store, index) => (
+        {filteredStores.map((store, index) => (
           <div key={index} className="card">
             <h3>{store.name}</h3>
             <p>{store.address}</p>
@@ -119,10 +129,8 @@ function App() {
         ))}
       </div>
 
-      {stores.length > 0 && (
-        <button onClick={loadMore} disabled={loading}>
-          {loading ? "Loading..." : "Load More"}
-        </button>
+      {filteredStores.length > 0 && (
+        <button onClick={loadMore}>Load More</button>
       )}
     </div>
   );
