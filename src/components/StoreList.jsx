@@ -3,16 +3,32 @@ import React, { useEffect, useState } from "react";
 const StoreList = () => {
   const [stores, setStores] = useState([]);
   const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]); // for autocomplete
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     if (query) {
-      setStores([]); // clear old results on new search
+      fetchStoreSuggestions(query);  // Fetch suggestions as user types
+      setStores([]);  // clear old results
       setPage(1);     // reset page
       fetchStores(query, 1);
+    } else {
+      setSuggestions([]); // Clear suggestions if query is empty
     }
   }, [query]);
+
+  const fetchStoreSuggestions = async (searchQuery) => {
+    try {
+      const response = await fetch(
+        `https://locoshop-backend.onrender.com/api/stores/suggestions?q=${searchQuery}`
+      );
+      const data = await response.json();
+      setSuggestions(data);  // Set suggestions for autocomplete
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+    }
+  };
 
   const fetchStores = async (searchQuery, pageNum) => {
     try {
@@ -27,7 +43,6 @@ const StoreList = () => {
         setStores(prev => [...prev, ...data]);
       }
 
-      // If we got 3 results, maybe more available
       setHasMore(data.length === 3);
     } catch (error) {
       console.error("Error fetching stores:", error);
@@ -56,6 +71,17 @@ const StoreList = () => {
           marginBottom: "20px",
         }}
       />
+
+      {/* Autocomplete Dropdown */}
+      {suggestions.length > 0 && (
+        <div style={{ border: "1px solid #ccc", borderRadius: "8px", padding: "10px", backgroundColor: "#fff" }}>
+          {suggestions.map((suggestion, index) => (
+            <div key={index} style={{ padding: "8px", cursor: "pointer" }}>
+              {suggestion.name || suggestion.tags.join(", ")}
+            </div>
+          ))}
+        </div>
+      )}
 
       {stores.map((store) => (
         <div
