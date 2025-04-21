@@ -169,31 +169,31 @@ const StoreList = () => {
             </a>
 
             {/* Directions */}
-			<a
-			  href={
-				store.latitude && store.longitude
-				  ? `https://www.google.com/maps/search/?api=1&query=${store.latitude},${store.longitude}`
-				  : "javascript:void(0);"
-			  }
-			  onClick={(e) => {
-				if (!store.latitude || !store.longitude) {
-				  e.preventDefault(); // Prevent the click from doing anything
-				  alert("Location not available for this store.");
-				}
-			  }}
-			  target="_blank"
-			  rel="noopener noreferrer"
-			  title="Get Directions"
-			  style={{
-				padding: "8px 10px",
-				backgroundColor: "#e8eaf6",
-				borderRadius: "8px",
-				color: "#3f51b5",
-				textDecoration: "none",
-			  }}
-			>
-			  🧭 Direction
-			</a>
+            <a
+              href="#"
+              onClick={(e) => {
+                if (store.latitude && store.longitude) {
+                  window.open(
+                    `https://www.google.com/maps/search/?api=1&query=${store.latitude},${store.longitude}`,
+                    "_blank"
+                  );
+                } else {
+                  e.preventDefault();
+                  alert("Location not available for this store.");
+                }
+              }}
+              title="Get Directions"
+              style={{
+                padding: "8px 10px",
+                backgroundColor: "#e8eaf6",
+                borderRadius: "8px",
+                color: "#3f51b5",
+                textDecoration: "none",
+                cursor: "pointer",
+              }}
+            >
+              🧭 Direction
+            </a>
           </div>
         </div>
       ))}
