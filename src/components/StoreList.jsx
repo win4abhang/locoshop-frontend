@@ -3,18 +3,19 @@ import React, { useEffect, useState } from "react";
 const StoreList = () => {
   const [stores, setStores] = useState([]);
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]); // for autocomplete
+  const [suggestions, setSuggestions] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     if (query) {
-      fetchStoreSuggestions(query);  // Fetch suggestions as user types
-      setStores([]);  // clear old results
-      setPage(1);     // reset page
+      fetchStoreSuggestions(query);
+      setStores([]);
+      setPage(1);
       fetchStores(query, 1);
     } else {
-      setSuggestions([]); // Clear suggestions if query is empty
+      setSuggestions([]);
     }
   }, [query]);
 
@@ -24,7 +25,7 @@ const StoreList = () => {
         `https://locoshop-backend.onrender.com/api/stores/suggestions?q=${searchQuery}`
       );
       const data = await response.json();
-      setSuggestions(data);  // Set suggestions for autocomplete
+      setSuggestions(data);
     } catch (error) {
       console.error("Error fetching suggestions:", error);
     }
@@ -40,7 +41,7 @@ const StoreList = () => {
       if (pageNum === 1) {
         setStores(data);
       } else {
-        setStores(prev => [...prev, ...data]);
+        setStores((prev) => [...prev, ...data]);
       }
 
       setHasMore(data.length === 3);
@@ -56,33 +57,69 @@ const StoreList = () => {
   };
 
   return (
-    <div style={{ maxWidth: "600px", margin: "2rem auto", padding: "1rem" }}>
+    <div
+      style={{
+        maxWidth: "600px",
+        margin: "2rem auto",
+        padding: "1rem",
+        position: "relative",
+      }}
+    >
       <input
         type="text"
         placeholder="🔍 Search for a store (e.g., bike repair, puncture)..."
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setShowSuggestions(true);
+        }}
+        onFocus={() => setShowSuggestions(true)}
+        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
         style={{
           padding: "10px",
           fontSize: "16px",
           width: "100%",
           borderRadius: "8px",
           border: "1px solid #ccc",
-          marginBottom: "20px",
+          marginBottom: "5px",
         }}
       />
 
-      {/* Autocomplete Dropdown */}
-      {suggestions.length > 0 && (
-        <div style={{ border: "1px solid #ccc", borderRadius: "8px", padding: "10px", backgroundColor: "#fff" }}>
-          {suggestions.map((suggestion, index) => (
-            <div key={index} style={{ padding: "8px", cursor: "pointer" }}>
-              {suggestion.name || suggestion.tags.join(", ")}
+      {/* Suggestions Dropdown */}
+      {showSuggestions && suggestions.length > 0 && (
+        <div
+          style={{
+            border: "1px solid #ccc",
+            borderTop: "none",
+            borderRadius: "0 0 8px 8px",
+            maxHeight: "200px",
+            overflowY: "auto",
+            backgroundColor: "#fff",
+            zIndex: 999,
+            position: "absolute",
+            width: "100%",
+          }}
+        >
+          {suggestions.map((sug, index) => (
+            <div
+              key={index}
+              onClick={() => {
+                setQuery(sug.name || sug.tags[0]);
+                setShowSuggestions(false);
+              }}
+              style={{
+                padding: "10px",
+                cursor: "pointer",
+                borderBottom: "1px solid #eee",
+              }}
+            >
+              {sug.name || sug.tags.join(", ")}
             </div>
           ))}
         </div>
       )}
 
+      {/* Store Cards */}
       {stores.map((store) => (
         <div
           key={store._id}
@@ -99,7 +136,7 @@ const StoreList = () => {
           <p style={{ margin: "0 0 6px", color: "#555" }}>{store.address}</p>
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            {/* Call Button */}
+            {/* Call */}
             <a
               href={`tel:${store.phone}`}
               title="Call"
@@ -114,7 +151,7 @@ const StoreList = () => {
               📞 Call
             </a>
 
-            {/* WhatsApp Button */}
+            {/* WhatsApp */}
             <a
               href={`https://wa.me/91${store.phone.replace(/^0+/, "")}`}
               target="_blank"
@@ -131,7 +168,7 @@ const StoreList = () => {
               💬 Chat
             </a>
 
-            {/* Directions Button */}
+            {/* Directions */}
             <a
               href={
                 store.latitude && store.longitude
