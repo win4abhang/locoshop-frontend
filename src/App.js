@@ -4,7 +4,6 @@ import './App.css';
 
 const BACKEND_URL = 'https://locoshop-backend.onrender.com'; // your deployed backend URL
 
-// Helper function for fuzzy matching using Levenshtein distance
 const getLevenshteinDistance = (a, b) => {
   const tmp = [];
   for (let i = 0; i <= b.length; i++) tmp[i] = [i];
@@ -39,7 +38,7 @@ function App() {
         const lng = pos.coords.longitude;
         setLocation({ lat, lng });
       },
-      (err) => {
+      () => {
         setLocation({ lat: 18.5204, lng: 73.8567 }); // fallback
       }
     );
@@ -54,7 +53,7 @@ function App() {
     } else {
       setSuggestions([]);
     }
-  }, [query]);
+  }, [query, storeNames]); // ✅ Fixed here
 
   const handleSearch = async () => {
     if (!location.lat || !location.lng) {
@@ -102,7 +101,6 @@ function App() {
           {loading ? "Loading..." : "Search"}
         </button>
 
-        {/* Autocomplete suggestions */}
         {suggestions.length > 0 && (
           <ul className="suggestions-list">
             {suggestions.map((suggestion, index) => (
