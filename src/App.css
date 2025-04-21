@@ -73,3 +73,20 @@ button {
 .suggestions-list li:hover {
   background-color: #f0f0f0;
 }
+.autocomplete {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  max-width: 300px;
+  margin: 5px auto;
+  padding: 0;
+  text-align: left;
+}
+
+.suggestion {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.suggestion:hover {
+  background-color: #eee;
+}
