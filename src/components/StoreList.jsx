@@ -88,3 +88,48 @@ const StoreList = () => {
             >
               💬 Chat
             </a>
+
+            {/* Direction Button */}
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${store.latitude},${store.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                textDecoration: 'none',
+                fontSize: '18px',
+                padding: '8px 10px',
+                backgroundColor: '#e3f2fd',
+                borderRadius: '8px',
+                color: '#4285F4'
+              }}
+              title="Get Directions"
+            >
+              📍 Direction
+            </a>
+          </div>
+        </div>
+      ))}
+
+      {/* Show More Button */}
+      {visibleCount < allStores.length && (
+        <button
+          onClick={handleShowMore}
+          style={{
+            marginTop: '20px',
+            padding: '10px 20px',
+            fontSize: '16px',
+            backgroundColor: '#007bff',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer'
+          }}
+        >
+          Show More
+        </button>
+      )}
+    </div>
+  );
+};
+
+export default StoreList;
