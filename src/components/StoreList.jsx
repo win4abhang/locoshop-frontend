@@ -168,17 +168,15 @@ const StoreList = () => {
               💬 Chat
             </a>
 
-            {/* Directions */}
-            <a
-              href="#"
-              onClick={(e) => {
+            {/* Directions - replaced <a> with <button> */}
+            <button
+              onClick={() => {
                 if (store.latitude && store.longitude) {
                   window.open(
                     `https://www.google.com/maps/search/?api=1&query=${store.latitude},${store.longitude}`,
                     "_blank"
                   );
                 } else {
-                  e.preventDefault();
                   alert("Location not available for this store.");
                 }
               }}
@@ -190,10 +188,11 @@ const StoreList = () => {
                 color: "#3f51b5",
                 textDecoration: "none",
                 cursor: "pointer",
+                border: "none",
               }}
             >
               🧭 Direction
-            </a>
+            </button>
           </div>
         </div>
       ))}
