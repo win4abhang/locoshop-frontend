@@ -1,3 +1,4 @@
+// App.js
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
@@ -20,8 +21,6 @@ const getLevenshteinDistance = (a, b) => {
   return tmp[b.length][a.length];
 };
 
-const BACKEND_URL = 'https://locoshop-backend.onrender.com'; // your deployed backend URL
-
 function App() {
   const [query, setQuery] = useState('');
   const [stores, setStores] = useState([]);
@@ -31,7 +30,6 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
 
-  // Store names for autocomplete
   const storeNames = stores.map(store => store.name);
 
   useEffect(() => {
@@ -42,16 +40,15 @@ function App() {
         setLocation({ lat, lng });
       },
       (err) => {
-        setLocation({ lat: 18.5204, lng: 73.8567 }); // Fallback to Pune
+        setLocation({ lat: 18.5204, lng: 73.8567 }); // fallback
       }
     );
   }, []);
 
   useEffect(() => {
     if (query.length > 0) {
-      // Fuzzy search for store names (using Levenshtein distance)
       const filtered = storeNames.filter(name =>
-        getLevenshteinDistance(query.toLowerCase(), name.toLowerCase()) <= 3 // Adjust the tolerance
+        getLevenshteinDistance(query.toLowerCase(), name.toLowerCase()) <= 3
       );
       setSuggestions(filtered);
     } else {
@@ -130,7 +127,7 @@ function App() {
       </div>
 
       {filteredStores.length > 0 && (
-        <button onClick={loadMore}>Load More</button>
+        <button onClick={() => setPage(page + 1)}>Load More</button>
       )}
     </div>
   );
