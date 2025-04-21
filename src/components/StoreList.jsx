@@ -25,6 +25,7 @@ const StoreList = () => {
         <div key={store._id}>
           <h2>{store.name}</h2>
           <p>{store.address}</p>
+		  <p>{store.phone}</p>
         </div>
       ))}
     </div>
