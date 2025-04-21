@@ -19,31 +19,68 @@ function App() {
         console.log('✅ Location:', lat, lng);
       },
       (err) => {
-        // Fallback location: Pune (you can change this)
-        alert('❌ Location access is blocked or denied.\nUsing default location: Pune');
+        // Fallback: Pune
+        alert('❌ Location access denied. Using default location: Pune');
         console.error('Geolocation error:', err.message);
-        setLocation({ lat: 18.5204, lng: 73.8567 }); // Pune coordinates
+        setLocation({ lat: 18.5204, lng: 73.8567 });
       }
     );
   }, []);
 
   const handleSearch = async () => {
-    setPage(1);
-    const res = await fetch(
-      `${BACKEND_URL}/api/stores/search?query=${query}&lat=${location.lat}&lng=${location.lng}&page=1`
-    );
-    const data = await res.json();
-    setStores(data);
+    if (!location.lat || !location.lng) {
+      alert("📍 Location not ready yet. Please wait and try again.");
+      return;
+    }
+
+    try {
+      setPage(1);
+      const res = await fetch(
+        `${BACKEND_URL}/api/stores/search?query=${query}&lat=${location.lat}&lng=${location.lng}&page=1`
+      );
+
+      if (!res.ok) {
+        alert("❌ Error fetching data from server.");
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.length === 0) {
+        alert("😕 No stores found for this search.");
+      }
+
+      setStores(data);
+    } catch (err) {
+      console.error("Fetch error:", err);
+      alert("❌ Network error or server unreachable.");
+    }
   };
 
   const loadMore = async () => {
-    const nextPage = page + 1;
-    const res = await fetch(
-      `${BACKEND_URL}/api/stores/search?query=${query}&lat=${location.lat}&lng=${location.lng}&page=${nextPage}`
-    );
-    const data = await res.json();
-    setStores((prev) => [...prev, ...data]);
-    setPage(nextPage);
+    if (!location.lat || !location.lng) {
+      alert("📍 Location not ready yet.");
+      return;
+    }
+
+    try {
+      const nextPage = page + 1;
+      const res = await fetch(
+        `${BACKEND_URL}/api/stores/search?query=${query}&lat=${location.lat}&lng=${location.lng}&page=${nextPage}`
+      );
+
+      if (!res.ok) {
+        alert("❌ Error fetching more data.");
+        return;
+      }
+
+      const data = await res.json();
+      setStores((prev) => [...prev, ...data]);
+      setPage(nextPage);
+    } catch (err) {
+      console.error("Fetch error:", err);
+      alert("❌ Could not load more data.");
+    }
   };
 
   return (
