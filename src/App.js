@@ -8,6 +8,7 @@ function App() {
   const [stores, setStores] = useState([]);
   const [page, setPage] = useState(1);
   const [location, setLocation] = useState({ lat: null, lng: null });
+  const [loading, setLoading] = useState(false); // Add loading state
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -19,10 +20,9 @@ function App() {
         console.log('✅ Location:', lat, lng);
       },
       (err) => {
-        // Fallback: Pune
         alert('❌ Location access denied. Using default location: Pune');
         console.error('Geolocation error:', err.message);
-        setLocation({ lat: 18.5204, lng: 73.8567 });
+        setLocation({ lat: 18.5204, lng: 73.8567 }); // Fallback to Pune
       }
     );
   }, []);
@@ -33,6 +33,7 @@ function App() {
       return;
     }
 
+    setLoading(true);
     try {
       setPage(1);
       const res = await fetch(
@@ -54,6 +55,8 @@ function App() {
     } catch (err) {
       console.error("Fetch error:", err);
       alert("❌ Network error or server unreachable.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -63,6 +66,7 @@ function App() {
       return;
     }
 
+    setLoading(true);
     try {
       const nextPage = page + 1;
       const res = await fetch(
@@ -80,6 +84,8 @@ function App() {
     } catch (err) {
       console.error("Fetch error:", err);
       alert("❌ Could not load more data.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -93,10 +99,15 @@ function App() {
           placeholder="Search like bike repair, shoes..."
           onChange={(e) => setQuery(e.target.value)}
         />
-        <button onClick={handleSearch}>Search</button>
+        <button onClick={handleSearch} disabled={loading}>
+          {loading ? "Loading..." : "Search"}
+        </button>
       </div>
 
       <div>
+        {stores.length === 0 && !loading && (
+          <p>No stores found for this search.</p>
+        )}
         {stores.map((store, index) => (
           <div key={index} className="card">
             <h3>{store.name}</h3>
@@ -109,7 +120,9 @@ function App() {
       </div>
 
       {stores.length > 0 && (
-        <button onClick={loadMore}>Load More</button>
+        <button onClick={loadMore} disabled={loading}>
+          {loading ? "Loading..." : "Load More"}
+        </button>
       )}
     </div>
   );
