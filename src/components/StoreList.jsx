@@ -137,38 +137,66 @@ const StoreList = () => {
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             {/* Call */}
-            <a
-              href={`tel:${store.phone}`}
-              title="Call"
-              style={{
-                padding: "8px 10px",
-                backgroundColor: "#e0f7fa",
-                borderRadius: "8px",
-                color: "#00796b",
-                textDecoration: "none",
-              }}
-            >
-              📞 Call
-            </a>
+            {store.phone ? (
+              <a
+                href={`tel:${store.phone}`}
+                title="Call"
+                style={{
+                  padding: "8px 10px",
+                  backgroundColor: "#e0f7fa",
+                  borderRadius: "8px",
+                  color: "#00796b",
+                  textDecoration: "none",
+                }}
+              >
+                📞 Call
+              </a>
+            ) : (
+              <span
+                title="Phone not available"
+                style={{
+                  padding: "8px 10px",
+                  backgroundColor: "#f0f0f0",
+                  borderRadius: "8px",
+                  color: "#aaa",
+                }}
+              >
+                🚫 No Call
+              </span>
+            )}
 
             {/* WhatsApp */}
-            <a
-              href={`https://wa.me/91${store.phone.replace(/^0+/, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="WhatsApp"
-              style={{
-                padding: "8px 10px",
-                backgroundColor: "#dcf8c6",
-                borderRadius: "8px",
-                color: "#25D366",
-                textDecoration: "none",
-              }}
-            >
-              💬 Chat
-            </a>
+            {store.phone ? (
+              <a
+                href={`https://wa.me/91${store.phone.replace(/^0+/, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="WhatsApp"
+                style={{
+                  padding: "8px 10px",
+                  backgroundColor: "#dcf8c6",
+                  borderRadius: "8px",
+                  color: "#25D366",
+                  textDecoration: "none",
+                }}
+              >
+                💬 Chat
+              </a>
+            ) : (
+              <span
+                title="WhatsApp not available"
+                style={{
+                  padding: "8px 10px",
+                  backgroundColor: "#f0f0f0",
+                  borderRadius: "8px",
+                  color: "#aaa",
+                }}
+              >
+                🚫 No Chat
+              </span>
+            )}
 
-            {/* Directions - replaced <a> with <button> */}
+            {/* Directions */}
             <button
               onClick={() => {
                 if (store.latitude && store.longitude) {
