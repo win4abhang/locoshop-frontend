@@ -12,28 +12,35 @@ function App() {
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        setLocation({ lat, lng });
+        alert(`✅ Location fetched:\nLat: ${lat}\nLng: ${lng}`);
+        console.log('✅ Location:', lat, lng);
       },
-      () => {
-        alert("Please allow location access.");
+      (err) => {
+        // Fallback location: Pune (you can change this)
+        alert('❌ Location access is blocked or denied.\nUsing default location: Pune');
+        console.error('Geolocation error:', err.message);
+        setLocation({ lat: 18.5204, lng: 73.8567 }); // Pune coordinates
       }
     );
   }, []);
 
-	console.log('Query:', query);
-	console.log('Lat:', location.lat);
-	console.log('Lng:', location.lng);
-	
-	const handleSearch = async () => {
+  const handleSearch = async () => {
     setPage(1);
-    const res = await fetch(`${BACKEND_URL}/api/stores/search?query=${query}&lat=${location.lat}&lng=${location.lng}&page=1`);
+    const res = await fetch(
+      `${BACKEND_URL}/api/stores/search?query=${query}&lat=${location.lat}&lng=${location.lng}&page=1`
+    );
     const data = await res.json();
     setStores(data);
   };
 
   const loadMore = async () => {
     const nextPage = page + 1;
-    const res = await fetch(`${BACKEND_URL}/api/stores/search?query=${query}&lat=${location.lat}&lng=${location.lng}&page=${nextPage}`);
+    const res = await fetch(
+      `${BACKEND_URL}/api/stores/search?query=${query}&lat=${location.lat}&lng=${location.lng}&page=${nextPage}`
+    );
     const data = await res.json();
     setStores((prev) => [...prev, ...data]);
     setPage(nextPage);
