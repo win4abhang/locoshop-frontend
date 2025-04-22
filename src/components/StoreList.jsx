@@ -7,19 +7,34 @@ const StoreList = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [location, setLocation] = useState({ latitude: null, longitude: null });
 
   useEffect(() => {
-    if (query) {
-      fetchStoreSuggestions(query);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+      }
+    );
+  }, []);
+
+  useEffect(() => {
+    if (query && location.latitude && location.longitude) {
+      fetchSuggestions(query);
       setStores([]);
       setPage(1);
-      fetchStores(query, 1);
+      fetchStores(query, 1, location.latitude, location.longitude);
     } else {
       setSuggestions([]);
     }
-  }, [query]);
+  }, [query, location]);
 
-  const fetchStoreSuggestions = async (searchQuery) => {
+  const fetchSuggestions = async (searchQuery) => {
     try {
       const response = await fetch(
         `https://locoshop-backend.onrender.com/api/stores/suggestions?q=${searchQuery}`
@@ -31,19 +46,17 @@ const StoreList = () => {
     }
   };
 
-  const fetchStores = async (searchQuery, pageNum) => {
+  const fetchStores = async (searchQuery, pageNum, lat, lng) => {
     try {
       const response = await fetch(
-        `https://locoshop-backend.onrender.com/api/stores/search?q=${searchQuery}&page=${pageNum}`
+        `https://locoshop-backend.onrender.com/api/stores/search?q=${searchQuery}&page=${pageNum}&lat=${lat}&lng=${lng}`
       );
       const data = await response.json();
-
       if (pageNum === 1) {
         setStores(data);
       } else {
         setStores((prev) => [...prev, ...data]);
       }
-
       setHasMore(data.length === 3);
     } catch (error) {
       console.error("Error fetching stores:", error);
@@ -52,22 +65,22 @@ const StoreList = () => {
 
   const loadMore = () => {
     const nextPage = page + 1;
-    fetchStores(query, nextPage);
+    fetchStores(query, nextPage, location.latitude, location.longitude);
     setPage(nextPage);
   };
 
   return (
-    <div
-      style={{
-        maxWidth: "600px",
-        margin: "2rem auto",
-        padding: "1rem",
-        position: "relative",
-      }}
-    >
+    <div style={{ maxWidth: "600px", margin: "2rem auto", padding: "1rem", position: "relative" }}>
+      <div style={{ marginBottom: "10px", fontSize: "14px", color: "#555" }}>
+        📍 Current Location:{" "}
+        {location.latitude && location.longitude
+          ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
+          : "Fetching..."}
+      </div>
+
       <input
         type="text"
-        placeholder="🔍 Search for a store (e.g., bike repair, puncture)..."
+        placeholder="🔍 Search for a service (e.g., puncture, bike repair)..."
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -85,7 +98,7 @@ const StoreList = () => {
         }}
       />
 
-      {/* Suggestions Dropdown */}
+      {/* Suggestions */}
       {showSuggestions && suggestions.length > 0 && (
         <div
           style={{
@@ -205,7 +218,7 @@ const StoreList = () => {
                     "_blank"
                   );
                 } else {
-                  alert(`Location not available for this store. ${store.latitude}, ${store.longitude}`);
+                  alert(`Location not available for this store.`);
                 }
               }}
               title="Get Directions"
@@ -214,7 +227,6 @@ const StoreList = () => {
                 backgroundColor: "#e8eaf6",
                 borderRadius: "8px",
                 color: "#3f51b5",
-                textDecoration: "none",
                 cursor: "pointer",
                 border: "none",
               }}
