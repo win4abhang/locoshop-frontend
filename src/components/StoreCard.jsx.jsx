@@ -6,7 +6,7 @@
     💬
   </a>
   <a
-    href={`https://www.google.com/maps/dir/?api=1&destination=${store.latitude},${store.longitude}`}
+    href={`https://www.google.com/maps/dir/?api=1&destination=${store.latitude},${store.longitude}&destination_place_id=${store.name}`}
     title="Directions"
     target="_blank"
     rel="noopener noreferrer"
