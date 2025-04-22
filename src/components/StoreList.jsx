@@ -90,13 +90,8 @@ const StoreList = () => {
         position: "relative",
       }}
     >
-      <div style={{ marginBottom: "10px", fontSize: "14px", color: "#555" }}>
-        📍 Current Location:{" "}
-        {location.latitude && location.longitude
-          ? `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-          : "Fetching..."}
-      </div>
-
+      <p>Find nearby shops and services easily</p>
+      
       {/* Search Input */}
       <input
         type="text"

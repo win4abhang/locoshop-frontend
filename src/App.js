@@ -1,14 +1,15 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import HomePage from './components/HomePage';
 import StoreList from './components/StoreList';
+// import HomePage from './components/HomePage'; // Optional: remove if not needed
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/stores" element={<StoreList />} />
+        <Route path="/" element={<StoreList />} />
+        {/* Optional: keep this if you still want a homepage at another route */}
+        {/* <Route path="/home" element={<HomePage />} /> */}
       </Routes>
     </Router>
   );
