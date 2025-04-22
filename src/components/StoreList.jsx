@@ -9,6 +9,7 @@ const StoreList = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [location, setLocation] = useState({ latitude: null, longitude: null });
 
+  // Get user location
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -25,7 +26,7 @@ const StoreList = () => {
 
   useEffect(() => {
     if (query && location.latitude && location.longitude) {
-      fetchSuggestions(query);
+      fetchStoreSuggestions(query);
       setStores([]);
       setPage(1);
       fetchStores(query, 1, location.latitude, location.longitude);
@@ -34,10 +35,11 @@ const StoreList = () => {
     }
   }, [query, location]);
 
-  const fetchSuggestions = async (searchQuery) => {
+  // 🔍 Autocomplete Suggestions API
+  const fetchStoreSuggestions = async (searchQuery) => {
     try {
       const response = await fetch(
-        `https://locoshop-backend.onrender.com/api/stores/suggestions?q=${searchQuery}`
+        `https://locoshop-backend.onrender.com/api/stores/autocomplete?q=${searchQuery}`
       );
       const data = await response.json();
       setSuggestions(data);
@@ -46,17 +48,20 @@ const StoreList = () => {
     }
   };
 
+  // 🏬 Fetch Stores API
   const fetchStores = async (searchQuery, pageNum, lat, lng) => {
     try {
       const response = await fetch(
         `https://locoshop-backend.onrender.com/api/stores/search?q=${searchQuery}&page=${pageNum}&lat=${lat}&lng=${lng}`
       );
       const data = await response.json();
+
       if (pageNum === 1) {
         setStores(data);
       } else {
         setStores((prev) => [...prev, ...data]);
       }
+
       setHasMore(data.length === 3);
     } catch (error) {
       console.error("Error fetching stores:", error);
@@ -69,8 +74,22 @@ const StoreList = () => {
     setPage(nextPage);
   };
 
+  const handleSelectSuggestion = (value) => {
+    setQuery(value);
+    setShowSuggestions(false);
+    fetchStores(value, 1, location.latitude, location.longitude);
+    setPage(1);
+  };
+
   return (
-    <div style={{ maxWidth: "600px", margin: "2rem auto", padding: "1rem", position: "relative" }}>
+    <div
+      style={{
+        maxWidth: "600px",
+        margin: "2rem auto",
+        padding: "1rem",
+        position: "relative",
+      }}
+    >
       <div style={{ marginBottom: "10px", fontSize: "14px", color: "#555" }}>
         📍 Current Location:{" "}
         {location.latitude && location.longitude
@@ -78,9 +97,10 @@ const StoreList = () => {
           : "Fetching..."}
       </div>
 
+      {/* Search Input */}
       <input
         type="text"
-        placeholder="🔍 Search for a service (e.g., puncture, bike repair)..."
+        placeholder="🔍 Search for a store (e.g., bike repair, puncture)..."
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -98,38 +118,41 @@ const StoreList = () => {
         }}
       />
 
-      {/* Suggestions */}
+      {/* Dropdown Suggestions */}
       {showSuggestions && suggestions.length > 0 && (
-        <div
+        <ul
           style={{
+            position: "absolute",
+            backgroundColor: "#fff",
             border: "1px solid #ccc",
-            borderTop: "none",
-            borderRadius: "0 0 8px 8px",
+            width: "100%",
+            zIndex: 1000,
             maxHeight: "200px",
             overflowY: "auto",
-            backgroundColor: "#fff",
-            zIndex: 999,
-            position: "absolute",
-            width: "100%",
+            borderTop: "none",
+            borderBottomLeftRadius: "8px",
+            borderBottomRightRadius: "8px",
           }}
         >
           {suggestions.map((sug, index) => (
-            <div
+            <li
               key={index}
-              onClick={() => {
-                setQuery(sug.name || sug.tags[0]);
-                setShowSuggestions(false);
-              }}
+              onClick={() =>
+                handleSelectSuggestion(sug.name || sug.tags[0])
+              }
               style={{
                 padding: "10px",
                 cursor: "pointer",
                 borderBottom: "1px solid #eee",
               }}
             >
-              {sug.name || sug.tags.join(", ")}
-            </div>
+              <strong>{sug.name}</strong>
+              <div style={{ fontSize: "12px", color: "#777" }}>
+                {sug.tags.join(", ")}
+              </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
       {/* Store Cards */}
@@ -149,11 +172,9 @@ const StoreList = () => {
           <p style={{ margin: "0 0 6px", color: "#555" }}>{store.address}</p>
 
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            {/* Call */}
             {store.phone ? (
               <a
                 href={`tel:${store.phone}`}
-                title="Call"
                 style={{
                   padding: "8px 10px",
                   backgroundColor: "#e0f7fa",
@@ -166,7 +187,6 @@ const StoreList = () => {
               </a>
             ) : (
               <span
-                title="Phone not available"
                 style={{
                   padding: "8px 10px",
                   backgroundColor: "#f0f0f0",
@@ -178,13 +198,11 @@ const StoreList = () => {
               </span>
             )}
 
-            {/* WhatsApp */}
             {store.phone ? (
               <a
                 href={`https://wa.me/91${store.phone.replace(/^0+/, "")}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                title="WhatsApp"
                 style={{
                   padding: "8px 10px",
                   backgroundColor: "#dcf8c6",
@@ -197,7 +215,6 @@ const StoreList = () => {
               </a>
             ) : (
               <span
-                title="WhatsApp not available"
                 style={{
                   padding: "8px 10px",
                   backgroundColor: "#f0f0f0",
@@ -209,19 +226,17 @@ const StoreList = () => {
               </span>
             )}
 
-            {/* Directions */}
             <button
               onClick={() => {
                 if (store.latitude && store.longitude) {
                   window.open(
-                    `https://www.google.com/maps/dir/?api=1&destination=${store.latitude},${store.longitude}&destination_place_id=${store.name}`,
+                    `https://www.google.com/maps/dir/?api=1&query=${store.latitude},${store.longitude}&destination_place_id=${store.name}`,
                     "_blank"
                   );
                 } else {
-                  alert(`Location not available for this store.`);
+                  alert("Location not available for this store.");
                 }
               }}
-              title="Get Directions"
               style={{
                 padding: "8px 10px",
                 backgroundColor: "#e8eaf6",
@@ -237,6 +252,7 @@ const StoreList = () => {
         </div>
       ))}
 
+      {/* Load More */}
       {hasMore && (
         <button
           onClick={loadMore}
