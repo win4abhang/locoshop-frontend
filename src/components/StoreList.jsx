@@ -230,7 +230,7 @@ const StoreList = () => {
               onClick={() => {
                 if (store.latitude && store.longitude) {
                   window.open(
-                    `https://www.google.com/maps/dir/?api=1&query=${store.latitude},${store.longitude}&destination_place_id=${store.name}`,
+                    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.name)}@${store.latitude},${store.longitude}`,
                     "_blank"
                   );
                 } else {
