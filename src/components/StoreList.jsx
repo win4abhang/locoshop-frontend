@@ -3,10 +3,8 @@ import React, { useEffect, useState } from "react";
 const StoreList = () => {
   const [stores, setStores] = useState([]);
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [location, setLocation] = useState({ latitude: null, longitude: null });
 
   // Get user location
@@ -26,27 +24,11 @@ const StoreList = () => {
 
   useEffect(() => {
     if (query && location.latitude && location.longitude) {
-      fetchStoreSuggestions(query);
       setStores([]);
       setPage(1);
       fetchStores(query, 1, location.latitude, location.longitude);
-    } else {
-      setSuggestions([]);
     }
   }, [query, location]);
-
-  // 🔍 Autocomplete Suggestions API
-  const fetchStoreSuggestions = async (searchQuery) => {
-    try {
-      const response = await fetch(
-        `https://locoshop-backend.onrender.com/api/stores/autocomplete?q=${searchQuery}`
-      );
-      const data = await response.json();
-      setSuggestions(data);
-    } catch (error) {
-      console.error("Error fetching suggestions:", error);
-    }
-  };
 
   // 🏬 Fetch Stores API
   const fetchStores = async (searchQuery, pageNum, lat, lng) => {
@@ -74,13 +56,6 @@ const StoreList = () => {
     setPage(nextPage);
   };
 
-  const handleSelectSuggestion = (value) => {
-    setQuery(value);
-    setShowSuggestions(false);
-    fetchStores(value, 1, location.latitude, location.longitude);
-    setPage(1);
-  };
-
   return (
     <div
       style={{
@@ -91,18 +66,13 @@ const StoreList = () => {
       }}
     >
       <p>Find nearby shops and services easily</p>
-      
+
       {/* Search Input */}
       <input
         type="text"
         placeholder="🔍 Search for a store (e.g., bike repair, puncture)..."
         value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setShowSuggestions(true);
-        }}
-        onFocus={() => setShowSuggestions(true)}
-        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+        onChange={(e) => setQuery(e.target.value)}
         style={{
           padding: "10px",
           fontSize: "16px",
@@ -112,43 +82,6 @@ const StoreList = () => {
           marginBottom: "5px",
         }}
       />
-
-      {/* Dropdown Suggestions */}
-      {showSuggestions && suggestions.length > 0 && (
-        <ul
-          style={{
-            position: "absolute",
-            backgroundColor: "#fff",
-            border: "1px solid #ccc",
-            width: "100%",
-            zIndex: 1000,
-            maxHeight: "200px",
-            overflowY: "auto",
-            borderTop: "none",
-            borderBottomLeftRadius: "8px",
-            borderBottomRightRadius: "8px",
-          }}
-        >
-          {suggestions.map((sug, index) => (
-            <li
-              key={index}
-              onClick={() =>
-                handleSelectSuggestion(sug.name || sug.tags[0])
-              }
-              style={{
-                padding: "10px",
-                cursor: "pointer",
-                borderBottom: "1px solid #eee",
-              }}
-            >
-              <strong>{sug.name}</strong>
-              <div style={{ fontSize: "12px", color: "#777" }}>
-                {sug.tags.join(", ")}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
 
       {/* Store Cards */}
       {stores.map((store) => (
