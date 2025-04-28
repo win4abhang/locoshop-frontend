@@ -7,7 +7,6 @@ const StoreList = () => {
   const [hasMore, setHasMore] = useState(false);
   const [location, setLocation] = useState({ latitude: null, longitude: null });
 
-  // Get user location
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -30,7 +29,6 @@ const StoreList = () => {
     }
   }, [query, location]);
 
-  // 🏬 Fetch Stores API
   const fetchStores = async (searchQuery, pageNum, lat, lng) => {
     try {
       const response = await fetch(
@@ -63,9 +61,10 @@ const StoreList = () => {
         margin: "2rem auto",
         padding: "1rem",
         position: "relative",
+        width: "90%", // ✅ Responsive width
       }}
     >
-      <p>Find nearby shops and services easily</p>
+      <p style={{ fontSize: "1.2rem", textAlign: "center" }}>Find nearby shops and services easily</p>
 
       {/* Search Input */}
       <input
@@ -75,11 +74,12 @@ const StoreList = () => {
         onChange={(e) => setQuery(e.target.value)}
         style={{
           padding: "10px",
-          fontSize: "16px",
+          fontSize: "1rem",
           width: "100%",
           borderRadius: "8px",
           border: "1px solid #ccc",
-          marginBottom: "5px",
+          marginBottom: "10px",
+          boxSizing: "border-box",
         }}
       />
 
@@ -96,19 +96,30 @@ const StoreList = () => {
             backgroundColor: "#fff",
           }}
         >
-          <h2 style={{ margin: "0 0 10px", color: "#333" }}>{store.name}</h2>
-          <p style={{ margin: "0 0 6px", color: "#555" }}>{store.address}</p>
+          <h2 style={{ margin: "0 0 10px", color: "#333", fontSize: "1.2rem" }}>{store.name}</h2>
+          <p style={{ margin: "0 0 6px", color: "#555", fontSize: "0.95rem" }}>{store.address}</p>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap", // ✅ Allow buttons to wrap on smaller screens
+              alignItems: "center",
+              gap: "10px",
+              marginTop: "10px",
+            }}
+          >
             {store.phone ? (
               <a
                 href={`tel:${store.phone}`}
                 style={{
+                  flex: "1 1 30%",
                   padding: "8px 10px",
                   backgroundColor: "#e0f7fa",
                   borderRadius: "8px",
                   color: "#00796b",
                   textDecoration: "none",
+                  textAlign: "center",
+                  fontSize: "0.9rem",
                 }}
               >
                 📞 Call
@@ -116,10 +127,13 @@ const StoreList = () => {
             ) : (
               <span
                 style={{
+                  flex: "1 1 30%",
                   padding: "8px 10px",
                   backgroundColor: "#f0f0f0",
                   borderRadius: "8px",
                   color: "#aaa",
+                  textAlign: "center",
+                  fontSize: "0.9rem",
                 }}
               >
                 🚫 No Call
@@ -132,11 +146,14 @@ const StoreList = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
+                  flex: "1 1 30%",
                   padding: "8px 10px",
                   backgroundColor: "#dcf8c6",
                   borderRadius: "8px",
                   color: "#25D366",
                   textDecoration: "none",
+                  textAlign: "center",
+                  fontSize: "0.9rem",
                 }}
               >
                 💬 Chat
@@ -144,10 +161,13 @@ const StoreList = () => {
             ) : (
               <span
                 style={{
+                  flex: "1 1 30%",
                   padding: "8px 10px",
                   backgroundColor: "#f0f0f0",
                   borderRadius: "8px",
                   color: "#aaa",
+                  textAlign: "center",
+                  fontSize: "0.9rem",
                 }}
               >
                 🚫 No Chat
@@ -166,12 +186,15 @@ const StoreList = () => {
                 }
               }}
               style={{
+                flex: "1 1 30%",
                 padding: "8px 10px",
                 backgroundColor: "#e8eaf6",
                 borderRadius: "8px",
                 color: "#3f51b5",
                 cursor: "pointer",
                 border: "none",
+                textAlign: "center",
+                fontSize: "0.9rem",
               }}
             >
               🧭 Direction
@@ -187,12 +210,13 @@ const StoreList = () => {
           style={{
             marginTop: "20px",
             padding: "10px 20px",
-            fontSize: "16px",
+            fontSize: "1rem",
             borderRadius: "8px",
             border: "none",
             backgroundColor: "#007BFF",
             color: "#fff",
             cursor: "pointer",
+            width: "100%", // ✅ Make load more button full width on small screens
           }}
         >
           Show More
