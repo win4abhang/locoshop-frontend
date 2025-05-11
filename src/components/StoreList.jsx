@@ -178,7 +178,7 @@ const StoreList = () => {
               onClick={() => {
                 if (store.latitude && store.longitude) {
                   window.open(
-                    `https://www.google.com/maps/search/?api=1&query=${store.name},${store.latitude},${store.longitude}`,
+                    `https://www.google.com/maps/search/?api=1&query=${store.latitude},${store.longitude}`,
                     "_blank"
                   );
                 } else {
