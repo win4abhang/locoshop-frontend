@@ -35,23 +35,26 @@ const StoreList = () => {
         `https://locoshop-backend.onrender.com/api/stores/search?q=${searchQuery}&page=${pageNum}&lat=${lat}&lng=${lng}`
       );
       const data = await response.json();
-
-      if (Array.isArray(data)) {
+  
+      // Check if 'data.stores' exists and is an array
+      if (data && Array.isArray(data.stores)) {
         if (pageNum === 1) {
-          setStores(data);
+          setStores(data.stores); // Reset stores when it's the first page
         } else {
-          setStores((prev) => [...prev, ...data]);
+          setStores((prev) => [...prev, ...data.stores]); // Append more stores when loading next page
         }
-
-        setHasMore(data.length === 3);
+  
+        // Set hasMore based on the number of stores received
+        setHasMore(data.stores.length > 0 && pageNum < data.totalPages);
       } else {
-        console.error("Expected an array of stores, received:", data);
-        setHasMore(false);
+        console.error("Expected 'stores' to be an array, but got:", data);
+        setHasMore(false); // No more data to load if the response is not as expected
       }
     } catch (error) {
       console.error("Error fetching stores:", error);
     }
   };
+  
 
   const loadMore = () => {
     const nextPage = page + 1;
