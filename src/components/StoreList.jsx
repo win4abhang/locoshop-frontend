@@ -36,8 +36,6 @@ const StoreList = () => {
       );
       const data = await response.json();
 
-      console.log("Backend response:", data); // Log the response to debug
-
       if (Array.isArray(data)) {
         if (pageNum === 1) {
           setStores(data);
@@ -45,7 +43,7 @@ const StoreList = () => {
           setStores((prev) => [...prev, ...data]);
         }
 
-        setHasMore(data.length === 3); // Set hasMore based on number of stores fetched
+        setHasMore(data.length === 3);
       } else {
         console.error("Expected an array of stores, received:", data);
         setHasMore(false);
@@ -61,6 +59,10 @@ const StoreList = () => {
     setPage(nextPage);
   };
 
+  const isValidPhone = (phone) => {
+    return phone && phone !== "0000000000" && phone !== "0";
+  };
+
   return (
     <div
       style={{
@@ -68,12 +70,11 @@ const StoreList = () => {
         margin: "2rem auto",
         padding: "1rem",
         position: "relative",
-        width: "90%", // ✅ Responsive width
+        width: "90%",
       }}
     >
       <p style={{ fontSize: "1.2rem", textAlign: "center" }}>Find nearby shops and services easily</p>
 
-      {/* Search Input */}
       <input
         type="text"
         placeholder="🔍 Search for a store (e.g., bike repair, puncture)..."
@@ -90,7 +91,6 @@ const StoreList = () => {
         }}
       />
 
-      {/* Store Cards */}
       {stores.map((store) => (
         <div
           key={store._id}
@@ -109,13 +109,13 @@ const StoreList = () => {
           <div
             style={{
               display: "flex",
-              flexWrap: "wrap", // ✅ Allow buttons to wrap on smaller screens
+              flexWrap: "wrap",
               alignItems: "center",
               gap: "10px",
               marginTop: "10px",
             }}
           >
-            {store.phone ? (
+            {isValidPhone(store.phone) && (
               <a
                 href={`tel:${store.phone}`}
                 style={{
@@ -131,23 +131,9 @@ const StoreList = () => {
               >
                 📞 Call
               </a>
-            ) : (
-              <span
-                style={{
-                  flex: "1 1 30%",
-                  padding: "8px 10px",
-                  backgroundColor: "#f0f0f0",
-                  borderRadius: "8px",
-                  color: "#aaa",
-                  textAlign: "center",
-                  fontSize: "0.9rem",
-                }}
-              >
-                🚫 No Call
-              </span>
             )}
 
-            {store.phone ? (
+            {isValidPhone(store.phone) && (
               <a
                 href={`https://wa.me/91${store.phone.replace(/^0+/, "")}`}
                 target="_blank"
@@ -165,20 +151,6 @@ const StoreList = () => {
               >
                 💬 Chat
               </a>
-            ) : (
-              <span
-                style={{
-                  flex: "1 1 30%",
-                  padding: "8px 10px",
-                  backgroundColor: "#f0f0f0",
-                  borderRadius: "8px",
-                  color: "#aaa",
-                  textAlign: "center",
-                  fontSize: "0.9rem",
-                }}
-              >
-                🚫 No Chat
-              </span>
             )}
 
             <button
@@ -210,7 +182,6 @@ const StoreList = () => {
         </div>
       ))}
 
-      {/* Load More */}
       {hasMore && (
         <button
           onClick={loadMore}
@@ -223,7 +194,7 @@ const StoreList = () => {
             backgroundColor: "#007BFF",
             color: "#fff",
             cursor: "pointer",
-            width: "100%", // ✅ Make load more button full width on small screens
+            width: "100%",
           }}
         >
           Show More
