@@ -1,5 +1,21 @@
 import React, { useEffect, useState } from "react";
 
+// Function to calculate distance using Haversine formula
+const getDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in kilometers
+  return distance.toFixed(2); // Limit to 2 decimal places
+};
+
 const StoreList = () => {
   const [stores, setStores] = useState([]);
   const [query, setQuery] = useState("");
@@ -117,96 +133,107 @@ const StoreList = () => {
 
       {isLoading && <p style={{ textAlign: "center" }}>Loading nearby stores...</p>}
 
-      {stores.map((store) => (
-        <div
-          key={store._id}
-          style={{
-            border: "1px solid #eee",
-            borderRadius: "12px",
-            padding: "20px",
-            marginBottom: "15px",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-            backgroundColor: "#fff",
-          }}
-        >
-          <h2 style={{ margin: "0 0 10px", color: "#333", fontSize: "1.2rem" }}>{store.name}</h2>
-          <p style={{ margin: "0 0 6px", color: "#555", fontSize: "0.95rem" }}>{store.address}</p>
+      {stores.map((store) => {
+        const distance = getDistance(
+          location.latitude,
+          location.longitude,
+          store.latitude,
+          store.longitude
+        );
 
+        return (
           <div
+            key={store._id}
             style={{
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              gap: "10px",
-              marginTop: "10px",
+              border: "1px solid #eee",
+              borderRadius: "12px",
+              padding: "20px",
+              marginBottom: "15px",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+              backgroundColor: "#fff",
             }}
           >
-            {isValidPhone(store.phone) && (
-              <a
-                href={`tel:${store.phone}`}
-                style={{
-                  flex: "1 1 30%",
-                  padding: "8px 10px",
-                  backgroundColor: "#e0f7fa",
-                  borderRadius: "8px",
-                  color: "#00796b",
-                  textDecoration: "none",
-                  textAlign: "center",
-                  fontSize: "0.9rem",
-                }}
-              >
-                📞 Call
-              </a>
-            )}
+            <h2 style={{ margin: "0 0 10px", color: "#333", fontSize: "1.2rem" }}>
+              {store.name} <span style={{ fontSize: "0.9rem", color: "#666" }}>({distance} km)</span>
+            </h2>
+            <p style={{ margin: "0 0 6px", color: "#555", fontSize: "0.95rem" }}>{store.address}</p>
 
-            {isValidPhone(store.phone) && (
-              <a
-                href={`https://wa.me/91${store.phone.replace(/^0+/, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  flex: "1 1 30%",
-                  padding: "8px 10px",
-                  backgroundColor: "#dcf8c6",
-                  borderRadius: "8px",
-                  color: "#25D366",
-                  textDecoration: "none",
-                  textAlign: "center",
-                  fontSize: "0.9rem",
-                }}
-              >
-                💬 Chat
-              </a>
-            )}
-
-            <button
-              onClick={() => {
-                if (store.latitude && store.longitude) {
-                  window.open(
-                    `https://www.google.com/maps/search/?api=1&query=${store.latitude},${store.longitude}`,
-                    "_blank"
-                  );
-                } else {
-                  alert("Location not available for this store.");
-                }
-              }}
+            <div
               style={{
-                flex: "1 1 30%",
-                padding: "8px 10px",
-                backgroundColor: "#e8eaf6",
-                borderRadius: "8px",
-                color: "#3f51b5",
-                cursor: "pointer",
-                border: "none",
-                textAlign: "center",
-                fontSize: "0.9rem",
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: "10px",
+                marginTop: "10px",
               }}
             >
-              🧭 Direction
-            </button>
+              {isValidPhone(store.phone) && (
+                <a
+                  href={`tel:${store.phone}`}
+                  style={{
+                    flex: "1 1 30%",
+                    padding: "8px 10px",
+                    backgroundColor: "#e0f7fa",
+                    borderRadius: "8px",
+                    color: "#00796b",
+                    textDecoration: "none",
+                    textAlign: "center",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  📞 Call
+                </a>
+              )}
+
+              {isValidPhone(store.phone) && (
+                <a
+                  href={`https://wa.me/91${store.phone.replace(/^0+/, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    flex: "1 1 30%",
+                    padding: "8px 10px",
+                    backgroundColor: "#dcf8c6",
+                    borderRadius: "8px",
+                    color: "#25D366",
+                    textDecoration: "none",
+                    textAlign: "center",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  💬 Chat
+                </a>
+              )}
+
+              <button
+                onClick={() => {
+                  if (store.latitude && store.longitude) {
+                    window.open(
+                      `https://www.google.com/maps/search/?api=1&query=${store.latitude},${store.longitude}`,
+                      "_blank"
+                    );
+                  } else {
+                    alert("Location not available for this store.");
+                  }
+                }}
+                style={{
+                  flex: "1 1 30%",
+                  padding: "8px 10px",
+                  backgroundColor: "#e8eaf6",
+                  borderRadius: "8px",
+                  color: "#3f51b5",
+                  cursor: "pointer",
+                  border: "none",
+                  textAlign: "center",
+                  fontSize: "0.9rem",
+                }}
+              >
+                🧭 Direction
+              </button>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {hasMore && (
         <button
@@ -214,13 +241,13 @@ const StoreList = () => {
           style={{
             marginTop: "20px",
             padding: "10px 20px",
-            fontSize: "1rem",
-            borderRadius: "8px",
-            border: "none",
-            backgroundColor: "#007BFF",
+            backgroundColor: "#5c6bc0",
             color: "#fff",
-            cursor: "pointer",
+            border: "none",
+            borderRadius: "8px",
             width: "100%",
+            cursor: "pointer",
+            fontSize: "1rem",
           }}
         >
           Show More
@@ -229,5 +256,4 @@ const StoreList = () => {
     </div>
   );
 };
-
 export default StoreList;
