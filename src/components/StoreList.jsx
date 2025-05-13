@@ -32,7 +32,7 @@ const StoreList = () => {
         setWaitingForLocation(false);
         alert("Please allow location access to find nearby shops.");
         // Wake up server immediately
-        fetchStores("advertisement", 1, latitude, longitude);
+        //fetchStores("advertisement", 1, latitude, longitude);
       },
       (error) => {
         alert("Please allow location access to find nearby shops.");
@@ -117,6 +117,28 @@ const StoreList = () => {
           boxSizing: "border-box",
         }}
       />
+      <input
+        type="text"
+        placeholder="🔍 Search (e.g., bike repair, puncture)..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        style={{
+          padding: "10px",
+          fontSize: "1rem",
+          width: "100%",
+          borderRadius: "8px",
+          border: "1px solid #ccc",
+          marginBottom: "10px",
+          boxSizing: "border-box",
+        }}
+      />
+
+      {location.latitude && location.longitude && (
+        <p style={{ fontSize: "0.9rem", textAlign: "center", color: "#555", marginBottom: "10px" }}>
+          Your location: 📍 Latitude {location.latitude.toFixed(5)}, Longitude {location.longitude.toFixed(5)}
+        </p>
+      )}
+
 
       {isLoading && <p style={{ textAlign: "center" }}>Loading nearby stores...</p>}
 
