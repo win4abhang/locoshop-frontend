@@ -32,7 +32,7 @@ const StoreList = () => {
   const fetchStores = async (searchQuery, pageNum, lat, lng) => {
     try {
       const response = await fetch(
-        `https://locoshop-backend.onrender.com/api/stores/search?q=${searchQuery}&page=${pageNum}&lat=${lat}&lng=${lng}`
+        `https://locoshop-backend.onrender.com/api/stores/searchStores?q=${searchQuery}&page=${pageNum}&lat=${lat}&lng=${lng}`
       );
       const data = await response.json();
   
