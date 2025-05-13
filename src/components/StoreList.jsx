@@ -25,17 +25,17 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
   return parseFloat((R * c).toFixed(2));
 };
 
-
 const StoreList = () => {
   const [stores, setStores] = useState([]);
   const [query, setQuery] = useState("");
+  const [lastQuery, setLastQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [clickCount, setClickCount] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [location, setLocation] = useState({ latitude: null, longitude: null });
   const [waitingForLocation, setWaitingForLocation] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Request location on mount
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -51,16 +51,16 @@ const StoreList = () => {
     );
   }, []);
 
-  // Trigger store search when query or location changes
   useEffect(() => {
-    if (query && location.latitude && location.longitude) {
+    if (query !== lastQuery) {
       setStores([]);
       setPage(1);
-      fetchStores(query, 1, location.latitude, location.longitude);
-    } else if (!query && location.latitude && location.longitude) {
-      setStores([]);
-      setPage(1);
-      fetchStores("advertisement", 1, location.latitude, location.longitude);
+      setClickCount(1);
+      setLastQuery(query);
+    }
+    if (location.latitude && location.longitude) {
+      const searchTerm = query || "advertisement";
+      fetchStores(searchTerm, 1, location.latitude, location.longitude);
     }
   }, [query, location.latitude, location.longitude]);
 
@@ -89,6 +89,7 @@ const StoreList = () => {
   const loadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
+    setClickCount((prev) => prev + 1);
     fetchStores(query || "advertisement", nextPage, location.latitude, location.longitude);
   };
 
@@ -148,14 +149,13 @@ const StoreList = () => {
       )}
 
       {isLoading && <p style={{ textAlign: "center" }}>Loading nearby stores...</p>}
-      
 
       {stores.map((store) => {
         const distance = getDistance(
           parseFloat(location.latitude),
           parseFloat(location.longitude),
-          store.location.coordinates[1], // lat
-          store.location.coordinates[0]  // lng
+          store.location.coordinates[1],
+          store.location.coordinates[0]
         );
         return (
           <div
@@ -211,7 +211,7 @@ const StoreList = () => {
         );
       })}
 
-      {hasMore && (
+      {hasMore && clickCount < 20 && (
         <button
           onClick={loadMore}
           style={{
@@ -227,6 +227,24 @@ const StoreList = () => {
           }}
         >
           Show More
+        </button>
+      )}
+
+      {clickCount >= 20 && (
+        <button
+          disabled
+          style={{
+            marginTop: "20px",
+            padding: "10px 20px",
+            backgroundColor: "#ccc",
+            color: "#555",
+            border: "none",
+            borderRadius: "8px",
+            width: "100%",
+            fontSize: "1rem",
+          }}
+        >
+          Show More (Limit reached)
         </button>
       )}
     </div>
