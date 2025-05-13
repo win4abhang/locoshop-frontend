@@ -47,7 +47,7 @@ const StoreList = () => {
       setPage(1);
       fetchStores(query, 1, location.latitude, location.longitude);
     }
-  }, [query]);
+  }, [query, location.latitude, location.longitude]);
 
   const fetchStores = async (searchQuery, pageNum, lat, lng) => {
     setIsLoading(true);
