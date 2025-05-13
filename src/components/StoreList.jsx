@@ -63,7 +63,7 @@ const StoreList = () => {
   };
 
   const isValidPhone = (phone) => {
-    return phone && phone !== "0000000000" && phone !== "0";
+    return phone && phone !== "nan" && phone !== "0";
   };
 
   return (
