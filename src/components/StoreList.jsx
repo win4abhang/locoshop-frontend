@@ -143,8 +143,8 @@ const StoreList = () => {
         const distance = getDistance(
           location.latitude,
           location.longitude,
-          store.latitude,
-          store.longitude
+          store.lat,
+          store.lng
         );
         return (
           <div
@@ -184,9 +184,9 @@ const StoreList = () => {
               )}
               <button
                 onClick={() =>
-                  store.latitude && store.longitude
+                  store.lat && store.lng
                     ? window.open(
-                        `https://www.google.com/maps/search/?api=1&query=${store.latitude},${store.longitude}`,
+                        `https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`,
                         "_blank"
                       )
                     : alert("Location not available for this store.")
