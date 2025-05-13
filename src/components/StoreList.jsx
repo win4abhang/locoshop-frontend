@@ -148,13 +148,14 @@ const StoreList = () => {
       )}
 
       {isLoading && <p style={{ textAlign: "center" }}>Loading nearby stores...</p>}
+      
 
       {stores.map((store) => {
         const distance = getDistance(
-          location.latitude,
-          location.longitude,
-          store.lat,
-          store.lng
+          parseFloat(location.latitude),
+          parseFloat(location.longitude),
+          store.location.coordinates[1], // lat
+          store.location.coordinates[0]  // lng
         );
         return (
           <div
