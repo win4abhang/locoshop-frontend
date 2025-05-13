@@ -18,8 +18,8 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos((lat1 * Math.PI) / 180) *
-    Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLon / 2) ** 2;
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return parseFloat((R * c).toFixed(2));
@@ -28,13 +28,12 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
 const StoreList = () => {
   const [stores, setStores] = useState([]);
   const [query, setQuery] = useState("");
-  const [lastQuery, setLastQuery] = useState("");
   const [page, setPage] = useState(1);
-  const [clickCount, setClickCount] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [location, setLocation] = useState({ latitude: null, longitude: null });
   const [waitingForLocation, setWaitingForLocation] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadCount, setLoadCount] = useState(0); // new
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -52,15 +51,12 @@ const StoreList = () => {
   }, []);
 
   useEffect(() => {
-    if (query !== lastQuery) {
+    if (location.latitude && location.longitude) {
+      const q = query || "advertisement";
       setStores([]);
       setPage(1);
-      setClickCount(1);
-      setLastQuery(query);
-    }
-    if (location.latitude && location.longitude) {
-      const searchTerm = query || "advertisement";
-      fetchStores(searchTerm, 1, location.latitude, location.longitude);
+      setLoadCount(0); // reset load count on new query/location
+      fetchStores(q, 1, location.latitude, location.longitude);
     }
   }, [query, location.latitude, location.longitude]);
 
@@ -89,7 +85,7 @@ const StoreList = () => {
   const loadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    setClickCount((prev) => prev + 1);
+    setLoadCount((prev) => prev + 1); // increment load count
     fetchStores(query || "advertisement", nextPage, location.latitude, location.longitude);
   };
 
@@ -152,8 +148,8 @@ const StoreList = () => {
 
       {stores.map((store) => {
         const distance = getDistance(
-          parseFloat(location.latitude),
-          parseFloat(location.longitude),
+          location.latitude,
+          location.longitude,
           store.location.coordinates[1],
           store.location.coordinates[0]
         );
@@ -211,7 +207,7 @@ const StoreList = () => {
         );
       })}
 
-      {hasMore && clickCount < 20 && (
+      {hasMore && loadCount < 20 && (
         <button
           onClick={loadMore}
           style={{
@@ -227,24 +223,6 @@ const StoreList = () => {
           }}
         >
           Show More
-        </button>
-      )}
-
-      {clickCount >= 20 && (
-        <button
-          disabled
-          style={{
-            marginTop: "20px",
-            padding: "10px 20px",
-            backgroundColor: "#ccc",
-            color: "#555",
-            border: "none",
-            borderRadius: "8px",
-            width: "100%",
-            fontSize: "1rem",
-          }}
-        >
-          Show More (Limit reached)
         </button>
       )}
     </div>
