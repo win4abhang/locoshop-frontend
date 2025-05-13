@@ -61,7 +61,7 @@ const StoreList = () => {
       console.error("latitude:", lat);
       console.error("longitude:", lng);
       const response = await fetch(
-        `https://locoshop-backend.onrender.com/api/stores/searchStores?q=${searchQuery}&page=${pageNum}&latitude=${lat}&longitude=${lng}`
+        `https://locoshop-backend.onrender.com/api/stores/searchStores?query=${searchQuery}&page=${pageNum}&latitude=${lat}&longitude=${lng}`
       );
       const data = await response.json();
 
