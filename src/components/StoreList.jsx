@@ -30,6 +30,7 @@ const StoreList = () => {
         const { latitude, longitude } = position.coords;
         setLocation({ latitude, longitude });
         setWaitingForLocation(false);
+        alert("Please allow location access to find nearby shops.");
         // Wake up server immediately
         fetchStores("advertisement", 1, latitude, longitude);
       },
@@ -53,7 +54,7 @@ const StoreList = () => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `https://locoshop-backend.onrender.com/api/stores/searchStores?q=${searchQuery}&page=${pageNum}&lat=${lat}&lng=${lng}`
+      `https://locoshop-backend.onrender.com/api/stores/searchStores?q=${searchQuery}&page=${pageNum}&latitude=${lat}&longitude=${lng}`
       );
       const data = await response.json();
 
