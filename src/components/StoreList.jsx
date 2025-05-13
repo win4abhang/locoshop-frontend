@@ -4,12 +4,13 @@ const getDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return (R * c).toFixed(2);
 };
@@ -23,12 +24,14 @@ const StoreList = () => {
   const [waitingForLocation, setWaitingForLocation] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Request location on mount
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         setLocation({ latitude, longitude });
         setWaitingForLocation(false);
+        alert("Please allow location access to find nearby shops.");
       },
       (error) => {
         alert("Please allow location access to find nearby shops.");
@@ -37,21 +40,18 @@ const StoreList = () => {
     );
   }, []);
 
+  // Trigger store search when query or location changes
   useEffect(() => {
-    if (location.latitude && location.longitude) {
+    if (query && location.latitude && location.longitude) {
       setStores([]);
       setPage(1);
-      fetchStores(query || "advertisement", 1, location.latitude, location.longitude);
-    }
-  }, [location.latitude, location.longitude]);
-
-  useEffect(() => {
-    if (location.latitude && location.longitude) {
+      fetchStores(query, 1, location.latitude, location.longitude);
+    } else if (!query && location.latitude && location.longitude) {
       setStores([]);
       setPage(1);
-      fetchStores(query || "advertisement", 1, location.latitude, location.longitude);
+      fetchStores("advertisement", 1, location.latitude, location.longitude);
     }
-  }, [query]);
+  }, [query, location.latitude, location.longitude]);
 
   const fetchStores = async (searchQuery, pageNum, lat, lng) => {
     setIsLoading(true);
@@ -60,6 +60,7 @@ const StoreList = () => {
         `https://locoshop-backend.onrender.com/api/stores/searchStores?q=${searchQuery}&page=${pageNum}&latitude=${lat}&longitude=${lng}`
       );
       const data = await response.json();
+
       if (Array.isArray(data.stores)) {
         setStores((prev) => (pageNum === 1 ? data.stores : [...prev, ...data.stores]));
         setHasMore(data.stores.length > 0 && pageNum < data.totalPages);
@@ -128,16 +129,8 @@ const StoreList = () => {
           boxSizing: "border-box",
         }}
       />
-
       {location.latitude && location.longitude && (
-        <p
-          style={{
-            fontSize: "0.9rem",
-            textAlign: "center",
-            color: "#555",
-            marginBottom: "10px",
-          }}
-        >
+        <p style={{ fontSize: "0.9rem", textAlign: "center", color: "#555", marginBottom: "10px" }}>
           Your location: 📍 Latitude {location.latitude.toFixed(5)}, Longitude{" "}
           {location.longitude.toFixed(5)}
         </p>
@@ -164,36 +157,18 @@ const StoreList = () => {
               backgroundColor: "#fff",
             }}
           >
-            <h2
-              style={{
-                margin: "0 0 10px",
-                color: "#333",
-                fontSize: "1.2rem",
-              }}
-            >
+            <h2 style={{ margin: "0 0 10px", color: "#333", fontSize: "1.2rem" }}>
               {store.name}{" "}
-              <span style={{ fontSize: "0.9rem", color: "#666" }}>
-                ({distance} km)
-              </span>
+              <span style={{ fontSize: "0.9rem", color: "#666" }}>({distance} km)</span>
             </h2>
             <p style={{ margin: "0 0 6px", color: "#555", fontSize: "0.95rem" }}>
               {store.address}
             </p>
 
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "10px",
-                marginTop: "10px",
-              }}
-            >
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "10px" }}>
               {isValidPhone(store.phone) && (
                 <>
-                  <a
-                    href={`tel:${store.phone}`}
-                    style={buttonStyle("#e0f7fa", "#00796b")}
-                  >
+                  <a href={`tel:${store.phone}`} style={buttonStyle("#e0f7fa", "#00796b")}>
                     📞 Call
                   </a>
                   <a
