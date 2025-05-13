@@ -6,6 +6,8 @@ const StoreList = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [location, setLocation] = useState({ latitude: null, longitude: null });
+  const [waitingForLocation, setWaitingForLocation] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -14,9 +16,12 @@ const StoreList = () => {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
         });
+        setWaitingForLocation(false);
       },
       (error) => {
+        alert("Location is required to find nearby stores. Please allow it.");
         console.error("Error getting location:", error);
+        // Stay in waiting state if location access is denied
       }
     );
   }, []);
@@ -30,13 +35,13 @@ const StoreList = () => {
   }, [query, location]);
 
   const fetchStores = async (searchQuery, pageNum, lat, lng) => {
+    setIsLoading(true);
     try {
       const response = await fetch(
         `https://locoshop-backend.onrender.com/api/stores/searchStores?q=${searchQuery}&page=${pageNum}&lat=${lat}&lng=${lng}`
       );
       const data = await response.json();
   
-      // Check if 'data.stores' exists and is an array
       if (data && Array.isArray(data.stores)) {
         if (pageNum === 1) {
           setStores(data.stores); // Reset stores when it's the first page
@@ -44,7 +49,6 @@ const StoreList = () => {
           setStores((prev) => [...prev, ...data.stores]); // Append more stores when loading next page
         }
   
-        // Set hasMore based on the number of stores received
         setHasMore(data.stores.length > 0 && pageNum < data.totalPages);
       } else {
         console.error("Expected 'stores' to be an array, but got:", data);
@@ -52,9 +56,10 @@ const StoreList = () => {
       }
     } catch (error) {
       console.error("Error fetching stores:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
-  
 
   const loadMore = () => {
     const nextPage = page + 1;
@@ -65,6 +70,22 @@ const StoreList = () => {
   const isValidPhone = (phone) => {
     return phone && phone !== "nan" && phone !== "0";
   };
+
+  if (waitingForLocation) {
+    return (
+      <div style={{
+        position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexDirection: "column", zIndex: 1000,
+      }}>
+        <p style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>
+          Please allow location access to find nearby shops
+        </p>
+        <p>Waiting for location permission...</p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -93,6 +114,8 @@ const StoreList = () => {
           boxSizing: "border-box",
         }}
       />
+
+      {isLoading && <p style={{ textAlign: "center" }}>Loading nearby stores...</p>}
 
       {stores.map((store) => (
         <div
