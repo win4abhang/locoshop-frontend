@@ -30,11 +30,11 @@ const StoreList = () => {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  //const [location, setLocation] = useState({ latitude: null, longitude: null });
-  //const [waitingForLocation, setWaitingForLocation] = useState(true);
+  const [location, setLocation] = useState({ latitude: null, longitude: null });
+  const [waitingForLocation, setWaitingForLocation] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [loadCount, setLoadCount] = useState(0); // new
-/*
+
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -49,7 +49,7 @@ const StoreList = () => {
       }
     );
   }, []);
-*/
+
   useEffect(() => {
     if (location.latitude && location.longitude) {
       const q = query || "advertisement";
