@@ -33,7 +33,7 @@ const StoreList = () => {
   const [location, setLocation] = useState({ latitude: null, longitude: null });
   const [waitingForLocation, setWaitingForLocation] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadCountMap, setLoadCountMap] = useState({});
+  const [loadCount, setLoadCount] = useState(0);
   const [suggestions, setSuggestions] = useState([]);
   const suggestionsRef = useRef(null);
 
@@ -43,6 +43,7 @@ const StoreList = () => {
         const { latitude, longitude } = position.coords;
         setLocation({ latitude, longitude });
         setWaitingForLocation(false);
+        // Removed alert as requested
       },
       (error) => {
         alert("Please allow location access to find nearby shops.");
@@ -51,6 +52,7 @@ const StoreList = () => {
     );
   }, []);
 
+  // Fetch stores only on Search button click or Enter press
   const fetchStores = async (searchQuery, pageNum, lat, lng) => {
     setIsLoading(true);
     try {
@@ -75,29 +77,25 @@ const StoreList = () => {
     }
   };
 
+  const loadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    setLoadCount((prev) => prev + 1);
+    fetchStores(query || "advertisement", nextPage, location.latitude, location.longitude);
+  };
+
+  const isValidPhone = (phone) => phone && phone !== "nan" && phone !== "0";
+
+  // Handle Search button click or Enter key press
   const handleSearch = () => {
     if (!location.latitude || !location.longitude) {
       alert("Location not available yet.");
       return;
     }
-    setPage(1);
     setStores([]);
+    setPage(1);
+    setLoadCount(0);
     fetchStores(query || "advertisement", 1, location.latitude, location.longitude);
-    setLoadCountMap((prev) => ({
-      ...prev,
-      [query || "advertisement"]: 0,
-    }));
-  };
-
-  const loadMore = () => {
-    const searchKey = query || "advertisement";
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchStores(searchKey, nextPage, location.latitude, location.longitude);
-    setLoadCountMap((prev) => ({
-      ...prev,
-      [searchKey]: (prev[searchKey] || 0) + 1,
-    }));
   };
 
   const handleKeyDown = (e) => {
@@ -108,8 +106,7 @@ const StoreList = () => {
     }
   };
 
-  const isValidPhone = (phone) => phone && phone !== "nan" && phone !== "0";
-
+  // Fetch autocomplete suggestions as user types
   useEffect(() => {
     if (!query) {
       setSuggestions([]);
@@ -133,15 +130,19 @@ const StoreList = () => {
         setSuggestions([]);
       }
     };
+
+    // Debounce autocomplete calls by 300ms
     const debounceTimeout = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(debounceTimeout);
   }, [query]);
 
+  // Handle clicking a suggestion
   const handleSuggestionClick = (suggestion) => {
     setQuery(suggestion);
     setSuggestions([]);
   };
 
+  // Close suggestions dropdown if clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
@@ -149,23 +150,41 @@ const StoreList = () => {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
-
-  const searchKey = query || "advertisement";
-  const currentLoadCount = loadCountMap[searchKey] || 0;
 
   if (waitingForLocation) {
     return (
-      <div style={{ textAlign: "center", marginTop: "2rem" }}>
-        <p>Please allow location access to find nearby shops.</p>
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          backgroundColor: "rgba(255, 255, 255, 0.95)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          zIndex: 1000,
+        }}
+      >
+        <p style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>
+          Please allow location access to find nearby shops
+        </p>
+        <p>Waiting for location permission...</p>
       </div>
     );
   }
 
   return (
     <div style={{ maxWidth: "600px", margin: "2rem auto", padding: "1rem", width: "90%" }}>
-      <h2 style={{ textAlign: "center" }}>Find nearby shops and services</h2>
+      <p style={{ fontSize: "1.2rem", textAlign: "center" }}>
+        Find nearby shops and services easily
+      </p>
 
       <div style={{ position: "relative" }} ref={suggestionsRef}>
         <input
@@ -181,6 +200,7 @@ const StoreList = () => {
             borderRadius: "8px",
             border: "1px solid #ccc",
             marginBottom: suggestions.length > 0 ? "0" : "10px",
+            boxSizing: "border-box",
           }}
         />
         {suggestions.length > 0 && (
@@ -211,6 +231,7 @@ const StoreList = () => {
                   cursor: "pointer",
                   borderBottom: "1px solid #eee",
                 }}
+                onMouseDown={(e) => e.preventDefault()} // prevent input blur
               >
                 {suggestion}
               </li>
@@ -219,18 +240,25 @@ const StoreList = () => {
         )}
       </div>
 
+      {location.latitude && location.longitude && (
+        <p style={{ fontSize: "0.9rem", textAlign: "center", color: "#555", marginBottom: "10px" }}>
+          Your location: 📍 Latitude {location.latitude.toFixed(5)}, Longitude{" "}
+          {location.longitude.toFixed(5)}
+        </p>
+      )}
+
       <button
         onClick={handleSearch}
         style={{
           marginBottom: "10px",
-          padding: "10px",
-          width: "100%",
-          borderRadius: "8px",
+          padding: "10px 20px",
           backgroundColor: "#5c6bc0",
           color: "#fff",
-          fontSize: "1rem",
           border: "none",
+          borderRadius: "8px",
+          width: "100%",
           cursor: "pointer",
+          fontSize: "1rem",
         }}
       >
         Search
@@ -249,17 +277,20 @@ const StoreList = () => {
           <div
             key={store._id}
             style={{
-              border: "1px solid #ddd",
-              borderRadius: "10px",
-              padding: "15px",
+              border: "1px solid #eee",
+              borderRadius: "12px",
+              padding: "20px",
               marginBottom: "15px",
-              backgroundColor: "#fafafa",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+              backgroundColor: "#fff",
             }}
           >
-            <h3>{store.name} <span style={{ fontSize: "0.9rem", color: "#555" }}>({distance} km)</span></h3>
-            <p>{store.address}</p>
-            {isValidPhone(store.phone) && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "10px" }}>
+            <h2 style={{ margin: "0 0 10px", color: "#333", fontSize: "1.2rem" }}>
+              {store.name} <span style={{ fontSize: "0.9rem", color: "#666" }}>({distance} km)</span>
+            </h2>
+            <p style={{ margin: "0 0 6px", color: "#555", fontSize: "0.95rem" }}>{store.address}</p>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "10px" }}>
               {isValidPhone(store.phone) && (
                 <>
                   <a href={`tel:${store.phone}`} style={buttonStyle("#e0f7fa", "#00796b")}>
@@ -289,39 +320,43 @@ const StoreList = () => {
                 🧭 Direction
               </button>
             </div>
-            )}
           </div>
         );
       })}
 
-      {/* Show More button conditions */}
-      {stores.length > 0 && currentLoadCount < 20 && hasMore && (
+      {hasMore && loadCount < 20 && (
         <button
           onClick={loadMore}
           style={{
-            display: "block",
-            margin: "0 auto",
+            marginTop: "20px",
             padding: "10px 20px",
-            borderRadius: "8px",
-            backgroundColor: "#4caf50",
+            backgroundColor: "#5c6bc0",
             color: "#fff",
-            fontSize: "1rem",
             border: "none",
+            borderRadius: "8px",
+            width: "100%",
             cursor: "pointer",
+            fontSize: "1rem",
           }}
         >
           Show More
         </button>
       )}
-
-      {/* Message when no more stores are available */}
-      {!hasMore && stores.length > 0 && (
-        <p style={{ textAlign: "center", color: "#888", marginTop: "1rem" }}>
-          No more stores to show.
-        </p>
-      )}
     </div>
   );
 };
+
+const buttonStyle = (bg, color, isButton = false) => ({
+  flex: "1 1 30%",
+  padding: "8px 10px",
+  backgroundColor: bg,
+  borderRadius: "8px",
+  color: color,
+  textDecoration: "none",
+  textAlign: "center",
+  fontSize: "0.9rem",
+  border: isButton ? "none" : undefined,
+  cursor: isButton ? "pointer" : undefined,
+});
 
 export default StoreList;
