@@ -312,8 +312,7 @@ const StoreList = () => {
                     ? window.open(
                         `https://www.google.com/maps/search/?api=1&query=${store.lat},${store.lng}`,
                         "_blank"
-                      )
-                    : alert("Location not available for this store.")
+                      )                    
                 }
                 style={buttonStyle("#e8eaf6", "#3f51b5", true)}
               >
