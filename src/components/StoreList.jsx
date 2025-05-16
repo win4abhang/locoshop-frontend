@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 const getDistance = (lat1, lon1, lat2, lon2) => {
   lat1 = parseFloat(lat1);
@@ -33,7 +33,9 @@ const StoreList = () => {
   const [location, setLocation] = useState({ latitude: null, longitude: null });
   const [waitingForLocation, setWaitingForLocation] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadCount, setLoadCount] = useState(0); // new
+  const [loadCount, setLoadCount] = useState(0);
+  const [suggestions, setSuggestions] = useState([]);
+  const suggestionsRef = useRef(null);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -41,7 +43,7 @@ const StoreList = () => {
         const { latitude, longitude } = position.coords;
         setLocation({ latitude, longitude });
         setWaitingForLocation(false);
-        alert("Please allow location access to find nearby shops.");
+        // Removed alert as requested
       },
       (error) => {
         alert("Please allow location access to find nearby shops.");
@@ -50,21 +52,14 @@ const StoreList = () => {
     );
   }, []);
 
-  useEffect(() => {
-    if (location.latitude && location.longitude) {
-      const q = query || "advertisement";
-      setStores([]);
-      setPage(1);
-      setLoadCount(0); // reset load count on new query/location
-      fetchStores(q, 1, location.latitude, location.longitude);
-    }
-  }, [query, location.latitude, location.longitude]);
-
+  // Fetch stores only on Search button click or Enter press
   const fetchStores = async (searchQuery, pageNum, lat, lng) => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `https://locoshop-backend.onrender.com/api/stores/searchStores?query=${searchQuery}&page=${pageNum}&latitude=${lat}&longitude=${lng}`
+        `https://locoshop-backend.onrender.com/api/stores/searchStores?query=${encodeURIComponent(
+          searchQuery
+        )}&page=${pageNum}&latitude=${lat}&longitude=${lng}`
       );
       const data = await response.json();
 
@@ -85,11 +80,80 @@ const StoreList = () => {
   const loadMore = () => {
     const nextPage = page + 1;
     setPage(nextPage);
-    setLoadCount((prev) => prev + 1); // increment load count
+    setLoadCount((prev) => prev + 1);
     fetchStores(query || "advertisement", nextPage, location.latitude, location.longitude);
   };
 
   const isValidPhone = (phone) => phone && phone !== "nan" && phone !== "0";
+
+  // Handle Search button click or Enter key press
+  const handleSearch = () => {
+    if (!location.latitude || !location.longitude) {
+      alert("Location not available yet.");
+      return;
+    }
+    setStores([]);
+    setPage(1);
+    setLoadCount(0);
+    fetchStores(query || "advertisement", 1, location.latitude, location.longitude);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSearch();
+      setSuggestions([]);
+    }
+  };
+
+  // Fetch autocomplete suggestions as user types
+  useEffect(() => {
+    if (!query) {
+      setSuggestions([]);
+      return;
+    }
+    const fetchSuggestions = async () => {
+      try {
+        const response = await fetch(
+          `https://locoshop-backend.onrender.com/api/stores/autocomplete?query=${encodeURIComponent(
+            query
+          )}`
+        );
+        const data = await response.json();
+        if (Array.isArray(data.suggestions)) {
+          setSuggestions(data.suggestions);
+        } else {
+          setSuggestions([]);
+        }
+      } catch (error) {
+        console.error("Error fetching autocomplete suggestions:", error);
+        setSuggestions([]);
+      }
+    };
+
+    // Debounce autocomplete calls by 300ms
+    const debounceTimeout = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(debounceTimeout);
+  }, [query]);
+
+  // Handle clicking a suggestion
+  const handleSuggestionClick = (suggestion) => {
+    setQuery(suggestion);
+    setSuggestions([]);
+  };
+
+  // Close suggestions dropdown if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
+        setSuggestions([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   if (waitingForLocation) {
     return (
@@ -122,27 +186,83 @@ const StoreList = () => {
         Find nearby shops and services easily
       </p>
 
-      <input
-        type="text"
-        placeholder="🔍 Search (e.g., bike repair, puncture)..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        style={{
-          padding: "10px",
-          fontSize: "1rem",
-          width: "100%",
-          borderRadius: "8px",
-          border: "1px solid #ccc",
-          marginBottom: "10px",
-          boxSizing: "border-box",
-        }}
-      />
+      <div style={{ position: "relative" }} ref={suggestionsRef}>
+        <input
+          type="text"
+          placeholder="🔍 Search (e.g., bike repair, puncture)..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          style={{
+            padding: "10px",
+            fontSize: "1rem",
+            width: "100%",
+            borderRadius: "8px",
+            border: "1px solid #ccc",
+            marginBottom: suggestions.length > 0 ? "0" : "10px",
+            boxSizing: "border-box",
+          }}
+        />
+        {suggestions.length > 0 && (
+          <ul
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              backgroundColor: "#fff",
+              border: "1px solid #ccc",
+              borderTop: "none",
+              maxHeight: "180px",
+              overflowY: "auto",
+              zIndex: 1000,
+              listStyle: "none",
+              margin: 0,
+              padding: 0,
+              borderRadius: "0 0 8px 8px",
+            }}
+          >
+            {suggestions.map((suggestion, index) => (
+              <li
+                key={index}
+                onClick={() => handleSuggestionClick(suggestion)}
+                style={{
+                  padding: "10px",
+                  cursor: "pointer",
+                  borderBottom: "1px solid #eee",
+                }}
+                onMouseDown={(e) => e.preventDefault()} // prevent input blur
+              >
+                {suggestion}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       {location.latitude && location.longitude && (
         <p style={{ fontSize: "0.9rem", textAlign: "center", color: "#555", marginBottom: "10px" }}>
           Your location: 📍 Latitude {location.latitude.toFixed(5)}, Longitude{" "}
           {location.longitude.toFixed(5)}
         </p>
       )}
+
+      <button
+        onClick={handleSearch}
+        style={{
+          marginBottom: "10px",
+          padding: "10px 20px",
+          backgroundColor: "#5c6bc0",
+          color: "#fff",
+          border: "none",
+          borderRadius: "8px",
+          width: "100%",
+          cursor: "pointer",
+          fontSize: "1rem",
+        }}
+      >
+        Search
+      </button>
 
       {isLoading && <p style={{ textAlign: "center" }}>Loading nearby stores...</p>}
 
@@ -166,12 +286,9 @@ const StoreList = () => {
             }}
           >
             <h2 style={{ margin: "0 0 10px", color: "#333", fontSize: "1.2rem" }}>
-              {store.name}{" "}
-              <span style={{ fontSize: "0.9rem", color: "#666" }}>({distance} km)</span>
+              {store.name} <span style={{ fontSize: "0.9rem", color: "#666" }}>({distance} km)</span>
             </h2>
-            <p style={{ margin: "0 0 6px", color: "#555", fontSize: "0.95rem" }}>
-              {store.address}
-            </p>
+            <p style={{ margin: "0 0 6px", color: "#555", fontSize: "0.95rem" }}>{store.address}</p>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "10px" }}>
               {isValidPhone(store.phone) && (
