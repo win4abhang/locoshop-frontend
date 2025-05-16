@@ -7,7 +7,7 @@ const StoreList = ({ stores, searchQuery }) => {
     setVisibleCount(prev => prev + 3);
   };
 
-  if (!searchQuery.trim()) return null;
+  if (!searchQuery || !searchQuery.trim()) return null;
 
   return (
     <div className="flex flex-col gap-4 mt-6">
